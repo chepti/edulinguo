@@ -1,0 +1,284 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}לוח בקרה | אדולינגו{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-4">לוח בקרה</h1>
+            
+            <!-- כרטיסי סטטיסטיקה -->
+            <div class="row mb-4">
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-primary text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">נקודות</h6>
+                                    <h2 class="mb-0">{{ user.points }}</h2>
+                                </div>
+                                <i class="fas fa-coins fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-danger text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">רצף למידה</h6>
+                                    <h2 class="mb-0">{{ user.streak }} ימים</h2>
+                                </div>
+                                <i class="fas fa-fire fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-success text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">קורסים פעילים</h6>
+                                    <h2 class="mb-0">{{ user.enrolled_courses.count }}</h2>
+                                </div>
+                                <i class="fas fa-book fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 mb-3">
+                    <div class="card bg-info text-white h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title">הישגים</h6>
+                                    <h2 class="mb-0">{{ user.achievements.count }}</h2>
+                                </div>
+                                <i class="fas fa-trophy fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- הקורסים שלי -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">הקורסים שלי</h5>
+                    <a href="{% url 'course_list' %}" class="btn btn-sm btn-primary">מצא קורסים נוספים</a>
+                </div>
+                <div class="card-body">
+                    {% if user.enrolled_courses.all %}
+                        <div class="list-group">
+                            {% for enrollment in user.enrolled_courses.all %}
+                                <a href="{% url 'course_detail' enrollment.course.slug %}" class="list-group-item list-group-item-action">
+                                    <div class="d-flex w-100 justify-content-between align-items-center">
+                                        <div>
+                                            <h5 class="mb-1">{{ enrollment.course.title }}</h5>
+                                            <p class="mb-1 text-muted">{{ enrollment.course.category.name }} | {{ enrollment.course.get_difficulty_level_display }}</p>
+                                        </div>
+                                        
+                                        {% if enrollment.completed %}
+                                            <span class="badge bg-success">הושלם</span>
+                                        {% else %}
+                                            <div class="progress" style="width: 100px;">
+                                                <div class="progress-bar" role="progressbar" style="width: 25%;" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">25%</div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-book-open fa-4x text-muted mb-3"></i>
+                            <p>עדיין לא נרשמת לקורסים.</p>
+                            <a href="{% url 'course_list' %}" class="btn btn-primary">מצא קורסים</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- פעילות אחרונה -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">פעילות אחרונה</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.progress.all %}
+                        <div class="timeline">
+                            {% for progress in user.progress.all|slice:":5" %}
+                                <div class="timeline-item">
+                                    <div class="timeline-marker {% if progress.completed %}bg-success{% else %}bg-secondary{% endif %}"></div>
+                                    <div class="timeline-content">
+                                        <h6 class="mb-0">{{ progress.atom.title }}</h6>
+                                        <p class="text-muted small mb-0">{{ progress.atom.unit.course.title }} - {{ progress.atom.unit.title }}</p>
+                                        <p class="text-muted small">
+                                            {% if progress.completed %}
+                                                הושלם ב-{{ progress.completed_at|date:"d/m/Y H:i" }}
+                                            {% else %}
+                                                בתהליך
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center py-3 text-muted">אין פעילות אחרונה להצגה.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- סרגל צד -->
+        <div class="col-md-4">
+            <!-- מטרות למידה -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">מטרות למידה</h5>
+                    <a href="{% url 'set_learning_goal' %}" class="btn btn-sm btn-primary">הוסף מטרה</a>
+                </div>
+                <div class="card-body">
+                    {% if user.learning_goals.all %}
+                        <div class="list-group">
+                            {% for goal in user.learning_goals.all %}
+                                <div class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h6 class="mb-1">{{ goal.title }}</h6>
+                                        {% if goal.completed %}
+                                            <span class="badge bg-success">הושלם</span>
+                                        {% else %}
+                                            <span class="badge bg-primary">בתהליך</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if goal.target_date %}
+                                        <p class="mb-1 small text-muted">יעד: {{ goal.target_date|date:"d/m/Y" }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-3">
+                            <p>אין לך מטרות למידה כרגע.</p>
+                            <a href="{% url 'set_learning_goal' %}" class="btn btn-primary">הגדר מטרה</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- הישגים -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">הישגים אחרונים</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.achievements.all %}
+                        <div class="row">
+                            {% for achievement in user.achievements.all|slice:":6" %}
+                                <div class="col-4 text-center mb-3">
+                                    <div class="achievement-icon mb-2">
+                                        {% if achievement.icon %}
+                                            <img src="{{ achievement.icon.url }}" alt="{{ achievement.title }}" class="img-fluid rounded-circle">
+                                        {% else %}
+                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                                                <i class="fas fa-award fa-2x"></i>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <p class="small mb-0" title="{{ achievement.description }}">{{ achievement.title }}</p>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-center py-3 text-muted">המשך ללמוד כדי לקבל הישגים!</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- המלצות למידה -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">המלצות למידה</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">המשך מהיכן שהפסקת</h6>
+                                <small class="text-primary">המשך</small>
+                            </div>
+                            <p class="mb-1 small">יסודות פייתון - לולאות ותנאים</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">קורס מומלץ</h6>
+                                <small class="text-primary">צפה</small>
+                            </div>
+                            <p class="mb-1 small">מבוא לבינה מלאכותית</p>
+                        </a>
+                        <a href="#" class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h6 class="mb-1">אתגר יומי</h6>
+                                <small class="text-primary">השלם</small>
+                            </div>
+                            <p class="mb-1 small">פתור 5 תרגילי חשיבה מתמטית</p>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* סגנון לציר הזמן */
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    
+    .timeline:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 9px;
+        width: 2px;
+        background-color: #e9ecef;
+    }
+    
+    .timeline-item {
+        position: relative;
+        margin-bottom: 20px;
+    }
+    
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+    }
+    
+    .timeline-content {
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .timeline-item:last-child .timeline-content {
+        border-bottom: none;
+    }
+</style>
+{% endblock %} 
