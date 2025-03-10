@@ -28,9 +28,9 @@ INSTALLED_APPS = [
     'whitenoise.runserver_nostatic',
     
     # Local apps
-    'users',
-    'courses',
-    'learning',
+    'users.apps.UsersConfig',
+    'courses.apps.CoursesConfig',
+    'learning.apps.LearningConfig',
 ]
 
 MIDDLEWARE = [
@@ -65,21 +65,13 @@ TEMPLATES = [
 WSGI_APPLICATION = 'edulinguo.wsgi.application'
 
 # Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-# Use PostgreSQL in production
-if os.environ.get('DATABASE_URL'):
-    DATABASES['default'] = dj_database_url.config(
+    'default': dj_database_url.config(
+        default='sqlite:///db.sqlite3',
         conn_max_age=600,
         conn_health_checks=True,
     )
+}
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -112,6 +104,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+
+# Enable WhiteNoise's GZip compression of static assets.
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
@@ -128,6 +122,7 @@ LOGOUT_REDIRECT_URL = 'home'
 
 # Security settings for production
 if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
